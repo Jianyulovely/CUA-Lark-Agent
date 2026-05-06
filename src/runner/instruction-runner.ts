@@ -1,4 +1,5 @@
 import type { GuiRunner } from '../agent/lark-agent.js';
+import { formatErrorMessage } from '../errors/format-error.js';
 import type { RunLogger } from '../logging/run-logger.js';
 
 export interface InstructionRunOptions {
@@ -36,7 +37,7 @@ export async function runInstructionWithLogging(
       timestamp: timestamp(),
       payload: {
         instruction: options.instruction,
-        error: error instanceof Error ? error.message : String(error)
+        error: formatErrorMessage(error)
       }
     });
     throw error;

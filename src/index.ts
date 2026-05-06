@@ -4,6 +4,7 @@ import { config as loadDotEnv } from 'dotenv';
 import { parseTestCase } from './cases/schema.js';
 import { loadEnvConfig } from './config/env.js';
 import { createUITarsRunner, summarizeGUIAgentData } from './agent/ui-tars-runner.js';
+import { formatErrorMessage } from './errors/format-error.js';
 import { createRunLogger, createRunName } from './logging/run-logger.js';
 import { runInstructionWithLogging } from './runner/instruction-runner.js';
 
@@ -23,6 +24,8 @@ try {
 
   const runInstruction = getFlagValue('--run-instruction');
   if (runInstruction) {
+    const maxLoopCount = getNumberFlagValue('--max-loop-count') ?? 3;
+    const modelTimeoutMs = getNumberFlagValue('--model-timeout-ms') ?? 120_000;
     const runLogger = createRunLogger({
       rootDir: resolve(process.cwd(), 'runs'),
       runName: createRunName('manual-instruction')
@@ -37,11 +40,15 @@ try {
         });
       },
       onError: (_data, error) => {
-        const message = error instanceof Error ? error.message : String(error);
+        const message = formatErrorMessage(error);
         console.error(`UI-TARS error: ${message}`);
-      }
+      },
+      maxLoopCount,
+      modelTimeoutMs
     });
     console.log(`Run log: ${runLogger.eventsPath}`);
+    console.log(`Max loop count: ${maxLoopCount}`);
+    console.log(`Model timeout: ${modelTimeoutMs}ms`);
     await runInstructionWithLogging({
       instruction: runInstruction,
       runner,
@@ -53,15 +60,19 @@ try {
         console.log(`UI-TARS data: ${summarizeGUIAgentData(data)}`);
       },
       onError: (_data, error) => {
-        const message = error instanceof Error ? error.message : String(error);
+        const message = formatErrorMessage(error);
         console.error(`UI-TARS error: ${message}`);
       }
     });
     console.log('UI-TARS runner initialized.');
   }
 } catch (error) {
-  const message = error instanceof Error ? error.message : String(error);
-  console.log(`Model configuration not ready: ${message}`);
+  const message = formatErrorMessage(error);
+  const prefix = message.startsWith('Missing required environment variable')
+    ? 'Model configuration not ready'
+    : 'Run failed';
+  console.error(`${prefix}: ${message}`);
+  process.exitCode = 1;
 }
 
 function getFlagValue(flagName: string): string | undefined {
@@ -71,4 +82,18 @@ function getFlagValue(flagName: string): string | undefined {
   }
 
   return process.argv[flagIndex + 1]?.trim() || undefined;
+}
+
+function getNumberFlagValue(flagName: string): number | undefined {
+  const rawValue = getFlagValue(flagName);
+  if (!rawValue) {
+    return undefined;
+  }
+
+  const parsed = Number(rawValue);
+  if (!Number.isFinite(parsed) || parsed <= 0) {
+    throw new Error(`${flagName} must be a positive number.`);
+  }
+
+  return parsed;
 }
