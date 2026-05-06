@@ -1,0 +1,7 @@
+{
+  "id": "im-send-message-001",
+  "product": "im",
+  "instruction": "在飞书中搜索指定测试群，发送一条唯一测试消息，并确认发送成功",
+  "expected": "会话中出现唯一测试消息"
+}
+
