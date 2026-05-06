@@ -3,6 +3,7 @@ import { resolve } from 'node:path';
 import { config as loadDotEnv } from 'dotenv';
 import { parseTestCase } from './cases/schema.js';
 import { loadEnvConfig } from './config/env.js';
+import { createUITarsRunner, summarizeGUIAgentData } from './agent/ui-tars-runner.js';
 
 loadDotEnv();
 
@@ -17,6 +18,19 @@ try {
   console.log(`Model endpoint configured: ${envConfig.model.baseURL}`);
   console.log(`Model id configured: ${envConfig.model.model}`);
   console.log(`Default Feishu group: ${envConfig.feishu.groupName}`);
+
+  if (process.argv.includes('--init-ui-tars')) {
+    createUITarsRunner(envConfig.model, {
+      onData: (data) => {
+        console.log(`UI-TARS data: ${summarizeGUIAgentData(data)}`);
+      },
+      onError: (_data, error) => {
+        const message = error instanceof Error ? error.message : String(error);
+        console.error(`UI-TARS error: ${message}`);
+      }
+    });
+    console.log('UI-TARS runner initialized.');
+  }
 } catch (error) {
   const message = error instanceof Error ? error.message : String(error);
   console.log(`Model configuration not ready: ${message}`);
