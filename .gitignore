@@ -3,6 +3,7 @@ dist/
 coverage/
 reports/
 runs/
+.tmp/
 .env
 .env.*
 !.env.example

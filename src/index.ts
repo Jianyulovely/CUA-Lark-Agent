@@ -4,9 +4,12 @@ import { config as loadDotEnv } from 'dotenv';
 import { parseTestCase } from './cases/schema.js';
 import { loadEnvConfig } from './config/env.js';
 import { createUITarsRunner, summarizeGUIAgentData } from './agent/ui-tars-runner.js';
+import { NutDesktopController } from './desktop/nut-desktop-controller.js';
 import { formatErrorMessage } from './errors/format-error.js';
 import { createRunLogger, createRunName } from './logging/run-logger.js';
 import { runInstructionWithLogging } from './runner/instruction-runner.js';
+import { runImSmoke } from './runner/im-smoke-runner.js';
+import { VisionMessageVerifier } from './verifier/vision-message-verifier.js';
 
 loadDotEnv();
 
@@ -23,7 +26,29 @@ try {
   console.log(`Default Feishu group: ${envConfig.feishu.groupName}`);
 
   const runInstruction = getFlagValue('--run-instruction');
-  if (runInstruction) {
+  if (process.argv.includes('--run-im-smoke')) {
+    const runLogger = createRunLogger({
+      rootDir: resolve(process.cwd(), 'runs'),
+      runName: createRunName(testCase.id)
+    });
+    const result = await runImSmoke({
+      groupName: envConfig.feishu.groupName,
+      messagePrefix: envConfig.feishu.messagePrefix,
+      openApp: !process.argv.includes('--skip-open-app'),
+      desktop: new NutDesktopController({
+        screenshotDir: runLogger.runDir
+      }),
+      verifier: new VisionMessageVerifier(envConfig.model),
+      logger: runLogger
+    });
+
+    console.log(`IM smoke status: ${result.status}`);
+    console.log(`Message: ${result.message}`);
+    console.log(`Report: ${result.reportPath}`);
+    if (result.status === 'failed') {
+      process.exitCode = 1;
+    }
+  } else if (runInstruction) {
     const maxLoopCount = getNumberFlagValue('--max-loop-count') ?? 3;
     const modelTimeoutMs = getNumberFlagValue('--model-timeout-ms') ?? 120_000;
     const runLogger = createRunLogger({
