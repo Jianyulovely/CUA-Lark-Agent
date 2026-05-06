@@ -7,6 +7,7 @@ import { createUITarsRunner, summarizeGUIAgentData } from './agent/ui-tars-runne
 import { NutDesktopController } from './desktop/nut-desktop-controller.js';
 import { formatErrorMessage } from './errors/format-error.js';
 import { createRunLogger, createRunName } from './logging/run-logger.js';
+import { runAiFirstImSmoke } from './runner/ai-im-smoke-runner.js';
 import { runInstructionWithLogging } from './runner/instruction-runner.js';
 import { runImSmoke } from './runner/im-smoke-runner.js';
 import { VisionMessageVerifier } from './verifier/vision-message-verifier.js';
@@ -26,7 +27,68 @@ try {
   console.log(`Default Feishu group: ${envConfig.feishu.groupName}`);
 
   const runInstruction = getFlagValue('--run-instruction');
-  if (process.argv.includes('--run-im-smoke')) {
+  if (process.argv.includes('--run-ai-im-smoke')) {
+    const maxLoopCount = getNumberFlagValue('--max-loop-count') ?? 8;
+    const modelTimeoutMs = getNumberFlagValue('--model-timeout-ms') ?? 120_000;
+    const runLogger = createRunLogger({
+      rootDir: resolve(process.cwd(), 'runs'),
+      runName: createRunName('ai-im-send-message')
+    });
+    const desktop = new NutDesktopController({
+      screenshotDir: runLogger.runDir
+    });
+    const verifier = new VisionMessageVerifier(envConfig.model);
+    const runner = createUITarsRunner(envConfig.model, {
+      onData: (data) => {
+        console.log(`UI-TARS data: ${summarizeGUIAgentData(data)}`);
+        runLogger.write({
+          type: 'runner.data',
+          timestamp: new Date().toISOString(),
+          payload: data
+        });
+      },
+      onError: (_data, error) => {
+        const message = formatErrorMessage(error);
+        console.error(`UI-TARS error: ${message}`);
+      },
+      maxLoopCount,
+      modelTimeoutMs
+    });
+
+    console.log(`Run log: ${runLogger.eventsPath}`);
+    console.log(`Max loop count: ${maxLoopCount}`);
+    console.log(`Model timeout: ${modelTimeoutMs}ms`);
+    const result = await runAiFirstImSmoke({
+      groupName: envConfig.feishu.groupName,
+      messagePrefix: envConfig.feishu.messagePrefix,
+      runner,
+      desktop,
+      verifier,
+      logger: runLogger,
+      openApp: !process.argv.includes('--skip-open-app'),
+      fallbackRunner: (message) =>
+        runImSmoke({
+          groupName: envConfig.feishu.groupName,
+          messagePrefix: envConfig.feishu.messagePrefix,
+          message,
+          openApp: !process.argv.includes('--skip-open-app'),
+          desktop,
+          verifier,
+          logger: runLogger
+        })
+    });
+
+    console.log(`AI IM smoke status: ${result.status}`);
+    console.log(`Mode: ${result.mode}`);
+    console.log(`Message: ${result.message}`);
+    console.log(`Report: ${result.reportPath}`);
+    if (result.aiError) {
+      console.log(`AI-first fallback reason: ${result.aiError}`);
+    }
+    if (result.status === 'failed') {
+      process.exitCode = 1;
+    }
+  } else if (process.argv.includes('--run-im-smoke')) {
     const runLogger = createRunLogger({
       rootDir: resolve(process.cwd(), 'runs'),
       runName: createRunName(testCase.id)

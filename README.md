@@ -19,6 +19,21 @@ The first milestone is an IM end-to-end smoke test:
 3. Verify the message appears in the conversation.
 4. Generate a report with screenshots, timing, and pass/fail result.
 
+The preferred demo entrypoint is AI-first:
+
+```bash
+npm run dev -- --run-ai-im-smoke --max-loop-count 8
+```
+
+This starts with a UI-TARS visual action loop, then falls back to the deterministic IM smoke flow if the visual loop fails or the final visual verification does not pass.
+Use `--skip-open-app` only when Feishu is already the foreground window.
+
+The deterministic fallback can also be run directly:
+
+```bash
+npm run dev -- --run-im-smoke --skip-open-app
+```
+
 ## Configuration
 
 Copy `.env.example` to `.env` locally and fill in model credentials. Do not commit `.env`.
