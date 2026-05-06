@@ -9,6 +9,7 @@ import type { MessageVerifier, MessageVerificationResult } from '../verifier/mes
 export interface ImSmokeRunOptions {
   groupName: string;
   messagePrefix: string;
+  message?: string;
   openApp?: boolean;
   desktop: DesktopController;
   verifier: MessageVerifier;
@@ -26,7 +27,7 @@ export interface ImSmokeRunResult {
 export async function runImSmoke(options: ImSmokeRunOptions): Promise<ImSmokeRunResult> {
   const now = options.now ?? (() => new Date());
   const startedAt = now();
-  const message = `${options.messagePrefix} ${startedAt.toISOString()}`;
+  const message = options.message ?? `${options.messagePrefix} ${startedAt.toISOString()}`;
   const steps: ReportStep[] = [];
 
   const log = (type: string, payload?: unknown) => {

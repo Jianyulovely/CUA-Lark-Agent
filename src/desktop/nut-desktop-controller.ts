@@ -40,7 +40,16 @@ export class NutDesktopController implements DesktopController {
   }
 
   async openGlobalSearch(): Promise<void> {
-    const point = this.options.searchBoxPoint ?? { x: 86, y: 74 };
+    await keyboard.pressKey(Key.LeftControl, Key.K);
+    await keyboard.releaseKey(Key.LeftControl, Key.K);
+    await sleep(800);
+    const point = this.options.searchBoxPoint;
+    if (!point) {
+      await keyboard.pressKey(Key.LeftControl, Key.A);
+      await keyboard.releaseKey(Key.LeftControl, Key.A);
+      return;
+    }
+
     await mouse.setPosition(new Point(point.x, point.y));
     await mouse.click(Button.LEFT);
     await sleep(800);
