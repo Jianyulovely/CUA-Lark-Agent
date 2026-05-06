@@ -37,6 +37,27 @@ describe('buildVisionSmokeRequest', () => {
       ]
     });
   });
+
+  test('uses a test image that satisfies Ark minimum dimensions', () => {
+    const request = buildVisionSmokeRequest({
+      baseURL: 'https://ark.cn-beijing.volces.com/api/v3',
+      model: 'ep-example',
+      apiKey: 'secret'
+    });
+    const body = JSON.parse(String(request.init.body)) as {
+      messages: Array<{
+        content: Array<{ image_url?: { url: string } }>;
+      }>;
+    };
+    const imageURL = body.messages[0]?.content.find((part) => part.image_url)?.image_url?.url;
+    const base64 = imageURL?.replace('data:image/png;base64,', '');
+    const png = Buffer.from(base64 ?? '', 'base64');
+    const width = png.readUInt32BE(16);
+    const height = png.readUInt32BE(20);
+
+    expect(width).toBeGreaterThanOrEqual(14);
+    expect(height).toBeGreaterThanOrEqual(14);
+  });
 });
 
 describe('runVisionSmokeTest', () => {
@@ -98,4 +119,3 @@ describe('runVisionSmokeTest', () => {
     ).rejects.not.toThrow('secret');
   });
 });
-

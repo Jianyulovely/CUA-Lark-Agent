@@ -1,7 +1,7 @@
 import type { EnvConfig } from '../config/env.js';
 
 const BLUE_SQUARE_PNG_BASE64 =
-  'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAADUlEQVR42mP8z8BQDwAFgwJ/lQn4NwAAAABJRU5ErkJggg==';
+  'iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAAdSURBVDhPY5Cb8P8/JZgBXYBUPGrAqAGjBgwWAwAsZKwfgyie3AAAAABJRU5ErkJggg==';
 
 export interface ModelConfig {
   baseURL: string;
@@ -113,4 +113,3 @@ function redactSecret(text: string, secret: string): string {
   }
   return text.split(secret).join('[REDACTED]');
 }
-
