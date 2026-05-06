@@ -7,6 +7,7 @@ export interface ModelConfig {
   baseURL: string;
   model: string;
   apiKey: string;
+  timeout?: number;
 }
 
 export interface VisionSmokeRequest {

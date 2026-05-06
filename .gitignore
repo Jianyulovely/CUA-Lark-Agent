@@ -2,8 +2,8 @@ node_modules/
 dist/
 coverage/
 reports/
+runs/
 .env
 .env.*
 !.env.example
 *.log
-
