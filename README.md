@@ -33,10 +33,22 @@ CUA_LARK_MODEL_API_KEY=<api-key>
 
 Before using the endpoint for UI-TARS, run a vision smoke test to confirm the endpoint supports image input.
 
+```bash
+npm run model:vision-smoke
+```
+
+Expected result:
+
+```text
+Vision smoke test passed.
+Model response: ...
+```
+
+If the endpoint rejects image input, this command fails before we wire the model into UI-TARS desktop execution.
+
 ## Current Status
 
 Repository initialization is in progress. See:
 
 - `docs/MVP-technical-plan.md`
 - `docs/superpowers/plans/2026-05-06-cua-lark-mvp.md`
-

@@ -4,6 +4,5 @@
 - Only one display is active.
 - The test group exists and is searchable.
 - `.env` contains local model credentials.
-- The model endpoint passed a vision smoke test.
+- `npm run model:vision-smoke` passed against the configured endpoint.
 - No real API key is committed.
-
